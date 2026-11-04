@@ -14,14 +14,24 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+
         val baseUrl = providers.gradleProperty("MYANMAR_API_BASE_URL")
-            .orElse("http://10.0.2.2:3000/").get()
+            .orElse("https://myanmarnode.com").get()
         buildConfigField("String", "API_BASE_URL", "\"$baseUrl\"")
     }
 
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
     }
 }
 
