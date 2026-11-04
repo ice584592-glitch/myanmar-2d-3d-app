@@ -36,9 +36,9 @@ jobs:
         run: |
           if [ -f "./gradlew" ]; then
             chmod +x ./gradlew
-            ./gradlew assembleDebug --no-daemon
+            ./gradlew assembleDebug --no-daemon -Pandroid.kotlinOptions.jvmTarget=17 -Dorg.gradle.java.home=$JAVA_HOME_17_X64
           else
-            gradle assembleDebug --no-daemon
+            gradle assembleDebug --no-daemon -Pandroid.kotlinOptions.jvmTarget=17 -Dorg.gradle.java.home=$JAVA_HOME_17_X64
           fi
 
       - name: Upload APK artifact
