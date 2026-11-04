@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
-          java-version: "8"
+          java-version: "17"
 
       - name: Set up Android SDK
         run: |
@@ -31,6 +31,29 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
+
+      - name: Force Java 17 compatibility
+        run: |
+          mkdir -p ~/.gradle
+          cat << 'EOF' > ~/.gradle/init.gradle
+          allprojects {
+              afterEvaluate { project ->
+                  if (project.hasProperty('android')) {
+                      project.android.compileOptions.sourceCompatibility = JavaVersion.VERSION_17
+                      project.android.compileOptions.targetCompatibility = JavaVersion.VERSION_17
+                  }
+                  project.tasks.configureEach { task ->
+                      if (task instanceof JavaCompile) {
+                          task.sourceCompatibility = "17"
+                          task.targetCompatibility = "17"
+                      }
+                      if (task.hasProperty('kotlinOptions')) {
+                          task.kotlinOptions.jvmTarget = "17"
+                      }
+                  }
+              }
+          }
+          EOF
 
       - name: Build debug APK
         run: |
