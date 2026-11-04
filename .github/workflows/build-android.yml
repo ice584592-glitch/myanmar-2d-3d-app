@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
-          java-version: "17"
+          java-version: "8"
 
       - name: Set up Android SDK
         run: |
@@ -36,9 +36,9 @@ jobs:
         run: |
           if [ -f "./gradlew" ]; then
             chmod +x ./gradlew
-            ./gradlew assembleDebug --no-daemon -Pandroid.kotlinOptions.jvmTarget=17 -Dorg.gradle.java.home=$JAVA_HOME_17_X64
+            ./gradlew assembleDebug --no-daemon
           else
-            gradle assembleDebug --no-daemon -Pandroid.kotlinOptions.jvmTarget=17 -Dorg.gradle.java.home=$JAVA_HOME_17_X64
+            gradle assembleDebug --no-daemon
           fi
 
       - name: Upload APK artifact
