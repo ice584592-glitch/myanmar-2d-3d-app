@@ -32,15 +32,20 @@ jobs:
         with:
           gradle-version: "8.9"
 
+      # build-root-directory ထည့်ပေးထားလို့ android folder ထဲကို ဝင်လုပ်သွားပါလိမ့်မယ်
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
+        working-directory: android
 
+      # working-directory ကို android လို့ ပြောင်းပေးထားပါတယ်
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon
+        working-directory: android
 
+      # path လမ်းကြောင်းမှာလည်း android/ တိုးပေးထားပါတယ်
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: Myanmar-2D3D-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
