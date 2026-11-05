@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: myanmar-2d3d-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: SETLIVE_API_KEY
+        sync: false
