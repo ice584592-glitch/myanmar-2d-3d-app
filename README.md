@@ -6,6 +6,8 @@ Myanmar 2D/3D results app built with Kotlin and Jetpack Compose.
 
 - Live 2D results and 2D/3D history from the configured API.
 - Burmese-first dark UI with connection status, loading feedback, retry action, and empty/error states.
+- Settings for live auto-refresh (15, 30, or 60 seconds), saved on the device.
+- Live Chat screen UI. A chat backend/WebSocket service is not configured yet, so messages cannot be sent or received until a chat service is connected.
 - Android internet and network-state permissions. Cleartext HTTP is disabled; use an HTTPS API endpoint.
 - The backend proxy keeps the upstream `SETLIVE_API_KEY` on the server rather than in the Android app.
 
