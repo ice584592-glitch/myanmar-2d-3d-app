@@ -19,6 +19,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
 import com.google.gson.JsonObject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -35,6 +39,23 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent { MaterialTheme(colorScheme = darkColorScheme(primary = Gold, background = Navy)) { ResultsApp() } }
     }
+}
+
+@Composable
+private fun BannerAd(modifier: Modifier = Modifier) {
+    AndroidView(
+        modifier = modifier,
+        factory = { context ->
+            AdView(context).apply {
+                setAdSize(AdSize.BANNER)
+                adUnitId = BuildConfig.ADMOB_BANNER_AD_UNIT_ID
+                loadAd(AdRequest.Builder().build())
+            }
+        },
+        update = { adView ->
+            adView.loadAd(AdRequest.Builder().build())
+        }
+    )
 }
 
 @Composable
@@ -111,7 +132,7 @@ private fun ResultsApp() {
                             ResultCard("မနက် ၉:၃၀", data?.firstText("result_930", "result_0930", "result_9_30") ?: "--", data?.text("live_set") ?: "--", data?.text("live_val") ?: "--")
                             ResultCard("နေ့လယ် ၁၁:၀၀", data?.firstText("result_1100") ?: "--", data?.text("live_set") ?: "--", data?.text("live_val") ?: "--")
                             ResultCard("နေ့လယ် ၂:၀၀", data?.firstText("result_200", "result_1400", "result_2") ?: "--", data?.text("live_set") ?: "--", data?.text("live_val") ?: "--")
-                            ResultCard("ညနေ ၄:၃၀", data?.firstText("result_430", "result_430") ?: "--", data?.text("live_set") ?: "--", data?.text("live_val") ?: "--")
+                            ResultCard("ညနေ ၄:၃၀", data?.firstText("result_430") ?: "--", data?.text("live_set") ?: "--", data?.text("live_val") ?: "--")
                             Text(data?.text("date") ?: "", color = Pale, modifier = Modifier.padding(12.dp))
                         }
                     }
@@ -187,6 +208,10 @@ private fun ResultsApp() {
                     onAutoRefreshChange = { enabled -> autoRefresh = enabled; preferences.edit().putBoolean("auto_refresh", enabled).apply() },
                     onRefreshSecondsChange = { seconds -> refreshSeconds = seconds; preferences.edit().putInt("refresh_seconds", seconds).apply() }
                 )
+            }
+
+            if (tab != "Settings") {
+                BannerAd(modifier = Modifier.fillMaxWidth().height(52.dp).padding(vertical = 6.dp))
             }
 
             Row(Modifier.fillMaxWidth().padding(bottom = 10.dp).background(Color(0xFF071F4F), RoundedCornerShape(28.dp)).padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
