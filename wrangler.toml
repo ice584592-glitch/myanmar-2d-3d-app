@@ -1,0 +1,7 @@
+name = "myanmar-2d-3d-app"
+main = "backend/cloudflare-worker.js"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+[vars]
+# Set SETLIVE_API_KEY as a Worker secret in Cloudflare.
