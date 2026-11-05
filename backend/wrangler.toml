@@ -1,0 +1,7 @@
+name = "myanmar-2d-3d-api"
+main = "cloudflare-worker.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+# Set SETLIVE_API_KEY as an encrypted Worker secret after deploying:
+# npx wrangler secret put SETLIVE_API_KEY
