@@ -20,6 +20,15 @@ android {
         val baseUrl = providers.gradleProperty("MYANMAR_API_BASE_URL")
             .orElse("https://myanmarnode.com/").get().trimEnd('/') + "/"
         buildConfigField("String", "API_BASE_URL", "\"$baseUrl\"")
+
+        // Use Google's test IDs by default. Replace through Gradle properties
+        // when you have your own AdMob app and banner IDs.
+        val admobAppId = providers.gradleProperty("ADMOB_APP_ID")
+            .orElse("ca-app-pub-3940256099942544~3347511713").get()
+        val bannerAdUnitId = providers.gradleProperty("ADMOB_BANNER_AD_UNIT_ID")
+            .orElse("ca-app-pub-3940256099942544/9214589741").get()
+        manifestPlaceholders["admobAppId"] = admobAppId
+        buildConfigField("String", "ADMOB_BANNER_AD_UNIT_ID", "\"$bannerAdUnitId\"")
     }
 
     buildFeatures {
@@ -46,5 +55,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.google.android.gms:play-services-ads:25.0.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
