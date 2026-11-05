@@ -4,6 +4,7 @@ import com.google.gson.JsonObject
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ResultsApi {
@@ -18,6 +19,9 @@ interface ResultsApi {
 
     @GET("api/v1/threed-result-latest")
     suspend fun latest3d(): JsonObject
+
+    @GET("api/v1/threed-results/{date}")
+    suspend fun history3dByDate(@Path("date") date: String): JsonObject
 }
 
 object ApiClient {
