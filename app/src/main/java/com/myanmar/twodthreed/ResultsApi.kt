@@ -15,6 +15,9 @@ interface ResultsApi {
 
     @GET("api/v1/threed-results")
     suspend fun history3d(@Query("page") page: Int = 1): JsonObject
+
+    @GET("api/v1/threed-result-latest")
+    suspend fun latest3d(): JsonObject
 }
 
 object ApiClient {

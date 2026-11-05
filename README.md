@@ -5,6 +5,7 @@ Myanmar 2D/3D results app built with Kotlin and Jetpack Compose.
 ## Features
 
 - Live 2D results and 2D/3D history from the configured API.
+- Latest 3D result, including the 3-digit result, full prize number, draw date, and draw schedule.
 - Burmese-first dark UI with connection status, loading feedback, retry action, and empty/error states.
 - Settings for live auto-refresh (15, 30, or 60 seconds), saved on the device.
 - Live Chat using Socket.IO with chat history and messages broadcast to connected users. The sample backend keeps the latest 100 messages in memory; messages are cleared when the server restarts.
@@ -24,6 +25,8 @@ CHAT_SERVER_URL=https://your-api.example.com
 ```
 
 The chat URL is the deployed server origin, not a path. Without `CHAT_SERVER_URL`, the Chat screen tells the user that chat is not configured. Configure HTTPS in production; the Android manifest does not enable cleartext traffic.
+
+The backend proxy allowlists `/api/v1/threed-result-latest` in addition to the live and history endpoints. The 3D screen shows its `data` fields and the `schedule` fields returned by this endpoint. The upstream endpoint itself is `https://setlive.myanmarnode.com/api/v1/threed-result-latest`.
 
 ## Build
 

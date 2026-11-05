@@ -22,8 +22,12 @@ if (!apiKey) {
 app.get('/health', (_req, res) => res.json({ ok: true, chat: true }));
 
 function isAllowed(path) {
-  return ['/api/v1/twod-result-live', '/api/v1/twod-results', '/api/v1/threed-results'].includes(path) ||
-    /^\\/api\\/v1\\/threed-results\\/\\d{4}-\\d{2}-\\d{2}$/.test(path);
+  return [
+    '/api/v1/twod-result-live',
+    '/api/v1/twod-results',
+    '/api/v1/threed-results',
+    '/api/v1/threed-result-latest'
+  ].includes(path) || /^\\/api\\/v1\\/threed-results\\/\\d{4}-\\d{2}-\\d{2}$/.test(path);
 }
 
 app.get('/api/v1/*', async (req, res) => {
@@ -44,7 +48,7 @@ app.get('/api/v1/*', async (req, res) => {
   } catch (_error) {
     res.status(502).json({ message: 'Upstream API unavailable' });
   }
-}
+});
 
 io.on('connection', (socket) => {
   socket.emit('chat:history', recentMessages);
