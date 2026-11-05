@@ -28,7 +28,7 @@ private val Pale = Color(0xFFB8D0FF)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { MaterialTheme { ResultsApp() } }
+        setContent { MaterialTheme(colorScheme = darkColorScheme(primary = Gold, background = Navy)) { ResultsApp() } }
     }
 }
 
@@ -38,6 +38,9 @@ private fun ResultsApp() {
     var live by remember { mutableStateOf<JsonObject?>(null) }
     var history2d by remember { mutableStateOf<JsonObject?>(null) }
     var history3d by remember { mutableStateOf<JsonObject?>(null) }
+    var latest3d by remember { mutableStateOf<JsonObject?>(null) }
+    var history3dPage by remember { mutableIntStateOf(1) }
+    var history3dLastPage by remember { mutableIntStateOf(1) }
     var error by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -50,20 +53,26 @@ private fun ResultsApp() {
                 when (tab) {
                     "Live" -> live = ApiClient.api.live2d()
                     "2D" -> history2d = ApiClient.api.history2d()
-                    else -> history3d = ApiClient.api.history3d()
+                    "3D" -> {
+                        latest3d = ApiClient.api.latest3d()
+                        history3d = ApiClient.api.history3d(history3dPage)
+                        val meta = history3d?.getAsJsonObject("meta")
+                        history3dPage = meta?.int("current_page") ?: history3dPage
+                        history3dLastPage = (meta?.int("last_page") ?: 1).coerceAtLeast(1)
+                    }
                 }
             } catch (_: Exception) {
-                error = "ဒေတာရယူမရပါ။ API server နဲ့ အင်တာနက်ကို စစ်ဆေးပါ။"
+                error = "ဒေတာရယူမရပါ။ API server နဲ့ အင်တာနက်ကို စစ်ဆေးပြီး ပြန်ကြိုးစားပါ။"
             } finally {
                 loading = false
             }
         }
     }
 
-    LaunchedEffect(tab) { refresh() }
+    LaunchedEffect(tab, history3dPage) { refresh() }
 
     Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Navy, Blue, Color(0xFF174EAB))))) {
-        Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 18.dp)) {
+        Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(horizontal = 18.dp)) {
             Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("မြန်မာ 2D / 3D", Modifier.weight(1f), color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Bold)
                 Text("ရလဒ်", color = Gold, fontWeight = FontWeight.Bold)
@@ -71,11 +80,7 @@ private fun ResultsApp() {
             error?.let { Text(it, color = Color(0xFFFFD5D5), modifier = Modifier.padding(bottom = 8.dp)) }
             if (loading) LinearProgressIndicator(Modifier.fillMaxWidth(), color = Gold)
 
-            LazyColumn(
-                Modifier.weight(1f),
-                contentPadding = PaddingValues(bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 when (tab) {
                     "Live" -> item {
                         val data = live?.getAsJsonObject("data")
@@ -91,10 +96,11 @@ private fun ResultsApp() {
                     "2D" -> {
                         item { Text("2D မှတ်တမ်း", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold) }
                         val rows = history2d?.getAsJsonArray("data")
-                        if (rows != null) items(rows.size()) { index ->
+                        if (rows == null || rows.size() == 0) item { EmptyState(loading) }
+                        else items(rows.size()) { index ->
                             val row = rows[index].asJsonObject
                             Surface(color = Color(0x332D69C1), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
-                                Column(Modifier.padding(18.dp)) {
+                                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     Text(row.text("date") ?: "", color = Gold, fontWeight = FontWeight.Bold)
                                     Text("11:00  ${row.text("result_1100") ?: "--"}     12:00  ${row.text("result_1200") ?: "--"}", color = Color.White)
                                     Text("3:00  ${row.text("result_300") ?: "--"}       4:30  ${row.text("result_430") ?: "--"}", color = Color.White)
@@ -103,15 +109,44 @@ private fun ResultsApp() {
                         }
                     }
                     else -> {
-                        item { Text("3D မှတ်တမ်း", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold) }
+                        item { Text("နောက်ဆုံး 3D ရလဒ်", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold) }
+                        item {
+                            val data = latest3d?.getAsJsonObject("data")
+                            val schedule = latest3d?.getAsJsonObject("schedule")
+                            Surface(color = Color(0x332D69C1), shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
+                                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                                    Text(data?.text("threed_number") ?: "---", color = Gold, fontSize = 58.sp, fontWeight = FontWeight.ExtraBold)
+                                    InfoLine("ဆုကြီးနံပါတ်", data?.text("first_prize_number") ?: "--")
+                                    InfoLine("ထွက်ရက်", data?.text("draw_date") ?: "--")
+                                    if (schedule != null) {
+                                        HorizontalDivider(color = Color(0x5577A6E8))
+                                        Text("နောက်လာမည့် အစီအစဉ်", color = Gold, fontWeight = FontWeight.Bold)
+                                        InfoLine("ထွက်မည့်ရက်", schedule.text("next_draw_date") ?: schedule.text("date") ?: "--")
+                                        InfoLine("ထွက်ချိန်", "${schedule.text("window_start") ?: "--"} - ${schedule.text("window_end") ?: "--"}")
+                                        InfoLine("ရလဒ်ထုတ်ပြန်ချိန်", schedule.text("result_by") ?: "--")
+                                        InfoLine("အခြေအနေ", schedule.text("phase") ?: "--")
+                                    }
+                                }
+                            }
+                        }
                         val rows = history3d?.getAsJsonArray("data")
-                        if (rows != null) items(rows.size()) { index ->
+                        val total = history3d?.getAsJsonObject("meta")?.int("total")
+                        item { Text("3D မှတ်တမ်း${total?.let { " ($it)" } ?: ""}", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold) }
+                        if (rows == null || rows.size() == 0) item { EmptyState(loading) }
+                        else items(rows.size()) { index ->
                             val row = rows[index].asJsonObject
                             Surface(color = Color(0x332D69C1), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
-                                Row(Modifier.fillMaxWidth().padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Text(row.text("draw_date") ?: "", Modifier.weight(1f), color = Pale, fontSize = 17.sp)
-                                    Text(row.text("threed_number") ?: "---", color = Gold, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                                Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(row.text("draw_date") ?: "", Modifier.weight(1f), color = Pale, fontSize = 16.sp)
+                                    Text(row.text("threed_number") ?: "---", color = Gold, fontSize = 32.sp, fontWeight = FontWeight.Bold)
                                 }
+                            }
+                        }
+                        item {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                TextButton(onClick = { history3dPage = (history3dPage - 1).coerceAtLeast(1) }, enabled = history3dPage > 1 && !loading) { Text("‹ အရင်", color = Gold) }
+                                Text("စာမျက်နှာ $history3dPage / $history3dLastPage", color = Pale)
+                                TextButton(onClick = { history3dPage = (history3dPage + 1).coerceAtMost(history3dLastPage) }, enabled = history3dPage < history3dLastPage && !loading) { Text("နောက် ›", color = Gold) }
                             }
                         }
                     }
@@ -131,6 +166,19 @@ private fun ResultsApp() {
 }
 
 @Composable
+private fun InfoLine(label: String, value: String) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(label, Modifier.weight(1f), color = Pale, fontSize = 13.sp)
+        Text(value, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+private fun EmptyState(loading: Boolean) {
+    Text(if (loading) "ဒေတာရယူနေသည်…" else "ပြသရန် ဒေတာမရှိသေးပါ။", color = Pale, modifier = Modifier.padding(16.dp))
+}
+
+@Composable
 private fun ResultCard(title: String, result: String, set: String, value: String) {
     Surface(color = Color(0x332D69C1), shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth().padding(vertical = 7.dp)) {
         Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -143,4 +191,5 @@ private fun ResultCard(title: String, result: String, set: String, value: String
     }
 }
 
-private fun JsonObject.text(key: String): String? = get(key)?.takeUnless { it.isJsonNull }?.asString
+private fun JsonObject.text(key: String): String? = get(key)?.takeUnless { it.isJsonNull }?.let { runCatching { it.asString }.getOrNull() }
+private fun JsonObject.int(key: String): Int? = get(key)?.takeUnless { it.isJsonNull }?.let { runCatching { it.asInt }.getOrNull() }
