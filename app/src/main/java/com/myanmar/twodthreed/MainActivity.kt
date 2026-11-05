@@ -60,6 +60,7 @@ private fun ResultsApp() {
     var online by remember { mutableStateOf(isNetworkAvailable(context)) }
     var autoRefresh by remember { mutableStateOf(preferences.getBoolean("auto_refresh", false)) }
     var refreshSeconds by remember { mutableIntStateOf(preferences.getInt("refresh_seconds", 30)) }
+    var username by remember { mutableStateOf(preferences.getString("chat_username", "ဧည့်သည်") ?: "ဧည့်သည်") }
 
     fun refresh() {
         online = isNetworkAvailable(context)
@@ -77,16 +78,14 @@ private fun ResultsApp() {
                     "3D" -> history3d = ApiClient.api.history3d()
                 }
             } catch (_: Exception) {
-                error = "ဒေတာရယူမရပါ။ ခဏစောင့်ပြီး ပြန်ကြိုးစားပါ။"
+                error = "ဒေတာရယူမရပါ။ ခာနစောင့်ပြီး ပြန်ကြိုးစားပါ။"
             } finally {
                 loading = false
             }
         }
     }
 
-    LaunchedEffect(tab) {
-        if (tab in listOf("Live", "2D", "3D")) refresh()
-    }
+    LaunchedEffect(tab) { if (tab in listOf("Live", "2D", "3D")) refresh() }
     LaunchedEffect(tab, autoRefresh, refreshSeconds) {
         if (tab == "Live" && autoRefresh) {
             while (true) {
@@ -96,38 +95,24 @@ private fun ResultsApp() {
         }
     }
 
-    Box(
-        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(BackgroundTop, BackgroundBottom)))
-    ) {
-        Column(
-            Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(horizontal = 18.dp)
-        ) {
-            Row(
-                Modifier.fillMaxWidth().padding(top = 18.dp, bottom = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(BackgroundTop, BackgroundBottom)))) {
+        Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(horizontal = 18.dp)) {
+            Row(Modifier.fillMaxWidth().padding(top = 18.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("မြန်မာ 2D / 3D", color = TextPrimary, fontSize = 25.sp, fontWeight = FontWeight.Bold)
                     Text(screenSubtitle(tab), color = TextSecondary, fontSize = 14.sp)
                 }
-                if (tab != "Settings" && tab != "Chat") {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.background(CardColor, CircleShape).padding(horizontal = 12.dp, vertical = 8.dp)
-                    ) {
+                if (tab in listOf("Live", "2D", "3D")) {
+                    Row(Modifier.background(CardColor, CircleShape).padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(8.dp).background(if (online) Color(0xFF57D9A3) else ErrorColor, CircleShape))
                         Spacer(Modifier.width(7.dp))
                         Text(if (online) "ချိတ်ဆက်ထားသည်" else "အော့ဖ်လိုင်း", color = TextSecondary, fontSize = 11.sp)
                     }
                 }
             }
-
             if (error != null && tab in listOf("Live", "2D", "3D")) {
                 Surface(color = Color(0xFF512C34), shape = RoundedCornerShape(14.dp)) {
-                    Row(
-                        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(error.orEmpty(), color = ErrorColor, modifier = Modifier.weight(1f), fontSize = 13.sp)
                         TextButton(onClick = { refresh() }) { Text("ပြန်စမ်း", color = Gold) }
                     }
@@ -140,19 +125,12 @@ private fun ResultsApp() {
             }
 
             when (tab) {
-                "Live" -> LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                "Live" -> LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item {
                         val data = live?.getAsJsonObject("data")
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Surface(color = CardColor, shape = RoundedCornerShape(26.dp), modifier = Modifier.fillMaxWidth()) {
-                                Column(
-                                    Modifier.fillMaxWidth().padding(vertical = 24.dp, horizontal = 20.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
+                                Column(Modifier.fillMaxWidth().padding(vertical = 24.dp, horizontal = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text("လက်ရှိ 2D", color = TextSecondary, fontSize = 16.sp)
                                     Text(data?.text("live") ?: "--", color = Gold, fontSize = 82.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 90.sp)
                                     Text(data?.text("date") ?: "ရလဒ်အသစ်ကို စောင့်နေသည်", color = TextSecondary, fontSize = 13.sp)
@@ -163,10 +141,7 @@ private fun ResultsApp() {
                         }
                     }
                 }
-                "2D" -> LazyColumn(
-                    modifier = Modifier.weight(1f), contentPadding = PaddingValues(bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                "2D" -> LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item { SectionTitle("2D မှတ်တမ်း") }
                     val rows = history2d?.getAsJsonArray("data")
                     if (rows == null || rows.size() == 0) item { EmptyState(loading) }
@@ -182,10 +157,7 @@ private fun ResultsApp() {
                         }
                     }
                 }
-                "3D" -> LazyColumn(
-                    modifier = Modifier.weight(1f), contentPadding = PaddingValues(bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                "3D" -> LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item { SectionTitle("3D မှတ်တမ်း") }
                     val rows = history3d?.getAsJsonArray("data")
                     if (rows == null || rows.size() == 0) item { EmptyState(loading) }
@@ -199,91 +171,126 @@ private fun ResultsApp() {
                         }
                     }
                 }
-                "Chat" -> ChatScreen()
+                "Chat" -> ChatScreen(
+                    modifier = Modifier.weight(1f),
+                    username = username,
+                    onUsernameChange = { name -> username = name; preferences.edit().putString("chat_username", name).apply() }
+                )
                 else -> SettingsScreen(
+                    modifier = Modifier.weight(1f),
                     autoRefresh = autoRefresh,
                     refreshSeconds = refreshSeconds,
-                    onAutoRefreshChange = { enabled ->
-                        autoRefresh = enabled
-                        preferences.edit().putBoolean("auto_refresh", enabled).apply()
-                    },
-                    onRefreshSecondsChange = { seconds ->
-                        refreshSeconds = seconds
-                        preferences.edit().putInt("refresh_seconds", seconds).apply()
-                    }
+                    onAutoRefreshChange = { enabled -> autoRefresh = enabled; preferences.edit().putBoolean("auto_refresh", enabled).apply() },
+                    onRefreshSecondsChange = { seconds -> refreshSeconds = seconds; preferences.edit().putInt("refresh_seconds", seconds).apply() }
                 )
             }
 
-            Row(
-                Modifier.fillMaxWidth().padding(bottom = 10.dp, top = 6.dp)
-                    .background(Color(0xFF091D38), RoundedCornerShape(24.dp)).padding(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(Modifier.fillMaxWidth().padding(bottom = 10.dp, top = 6.dp).background(Color(0xFF091D38), RoundedCornerShape(24.dp)).padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
                 listOf("Live", "2D", "3D", "Chat", "Settings").forEach { label ->
                     val selected = tab == label
                     TextButton(
-                        onClick = { tab = label }, modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(18.dp),
+                        onClick = { tab = label }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(18.dp),
                         contentPadding = PaddingValues(horizontal = 2.dp, vertical = 8.dp),
-                        colors = ButtonDefaults.textButtonColors(
-                            containerColor = if (selected) Gold else Color.Transparent,
-                            contentColor = if (selected) BackgroundTop else TextSecondary
-                        )
+                        colors = ButtonDefaults.textButtonColors(containerColor = if (selected) Gold else Color.Transparent, contentColor = if (selected) BackgroundTop else TextSecondary)
                     ) {
-                        Text(
-                            text = when (label) { "Settings" -> "ဆက်တင်"; "Chat" -> "Chat"; else -> label },
-                            fontWeight = FontWeight.Bold, fontSize = 11.sp, maxLines = 1
-                        )
+                        Text(when (label) { "Settings" -> "ဆက်တင်"; "Chat" -> "Chat"; else -> label }, fontWeight = FontWeight.Bold, fontSize = 11.sp, maxLines = 1)
                     }
                 }
-                if (tab in listOf("Live", "2D", "3D")) {
-                    TextButton(onClick = { refresh() }, contentPadding = PaddingValues(horizontal = 5.dp)) {
-                        Text("↻", color = Gold, fontSize = 20.sp)
-                    }
-                }
+                if (tab in listOf("Live", "2D", "3D")) TextButton(onClick = { refresh() }, contentPadding = PaddingValues(horizontal = 5.dp)) { Text("↻", color = Gold, fontSize = 20.sp) }
             }
         }
     }
 }
 
 @Composable
-private fun ChatScreen() {
-    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Surface(color = CardColor, shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Live Chat", color = TextPrimary, fontSize = 21.sp, fontWeight = FontWeight.Bold)
-                Text("အသုံးပြုသူများ အချင်းချင်း တိုက်ရိုက်ဆွေးနွေးရန်", color = TextSecondary)
-                HorizontalDivider(color = Color(0x334A6284))
-                Text("Chat server မချိတ်ဆက်ရသေးပါ", color = Gold, fontWeight = FontWeight.SemiBold)
-                Text(
-                    "ဒီနေရာမှာ Live Chat UI ကို ပြင်ဆင်ထားပါတယ်။ တကယ်တမ်း စာပို့/လက်ခံနိုင်ဖို့ chat backend သို့မဟုတ် WebSocket ဝန်ဆောင်မှု ချိတ်ဆက်ဖို့ လိုပါတယ်။",
-                    color = TextSecondary,
-                    fontSize = 14.sp
-                )
+private fun ChatScreen(modifier: Modifier, username: String, onUsernameChange: (String) -> Unit) {
+    val chat = remember { ChatClient(BuildConfig.CHAT_SERVER_URL) }
+    var messages by remember { mutableStateOf(emptyList<ChatMessage>()) }
+    var connected by remember { mutableStateOf(false) }
+    var status by remember { mutableStateOf<String?>(null) }
+    var draft by remember { mutableStateOf("") }
+
+    DisposableEffect(chat) {
+        chat.connect(
+            onConnected = { connected = it },
+            onHistory = { messages = it },
+            onMessage = { message -> messages = (messages + message).takeLast(100) },
+            onError = { status = it }
+        )
+        onDispose { chat.close() }
+    }
+
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Surface(color = CardColor, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+            Row(Modifier.padding(horizontal = 14.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(9.dp).background(if (connected) Color(0xFF57D9A3) else ErrorColor, CircleShape))
+                Spacer(Modifier.width(8.dp))
+                Text(if (connected) "Chat ချိတ်ဆက်ထားသည်" else "Chat server မချိတ်ဆက်ရသေးပါ", color = if (connected) TextPrimary else Gold, fontSize = 13.sp)
             }
         }
-        Surface(color = Color(0xFF091D38), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
-            Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Chat server ချိတ်ဆက်ပြီးနောက် စာရေးနိုင်ပါမည်", color = TextSecondary, modifier = Modifier.weight(1f), fontSize = 13.sp)
-                Text("ပို့ရန်", color = Color(0xFF7890B2), fontWeight = FontWeight.Bold)
+        status?.let { Text(it, color = ErrorColor, fontSize = 12.sp) }
+        OutlinedTextField(
+            value = username,
+            onValueChange = { onUsernameChange(it.take(24)) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = { Text("သင့်အမည်") },
+            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, focusedLabelColor = Gold, unfocusedLabelColor = TextSecondary)
+        )
+        LazyColumn(
+            modifier = Modifier.weight(1f).fillMaxWidth().background(Color(0x55091D38), RoundedCornerShape(18.dp)).padding(10.dp),
+            contentPadding = PaddingValues(vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (messages.isEmpty()) item {
+                Text(
+                    if (BuildConfig.CHAT_SERVER_URL.isBlank()) "Chat server URL ကို သတ်မှတ်ပြီး server ကို deploy လုပ်ပါ။ လုပ်နည်းကို README မှာ ကြည့်ပါ။" else "Chat မက်ဆေ့ချ် မရှိသေးပါ။",
+                    color = TextSecondary, modifier = Modifier.padding(10.dp), fontSize = 13.sp
+                )
             }
+            items(messages, key = { it.id }) { message ->
+                Surface(color = CardColor, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(horizontal = 12.dp, vertical = 9.dp)) {
+                        Text(message.username, color = Gold, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                        Text(message.text, color = TextPrimary, fontSize = 14.sp)
+                    }
+                }
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(
+                value = draft,
+                onValueChange = { draft = it.take(500) },
+                modifier = Modifier.weight(1f),
+                placeholder = { Text("စာရေးပါ…") },
+                maxLines = 3,
+                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, focusedBorderColor = Gold, unfocusedBorderColor = TextSecondary)
+            )
+            Button(
+                onClick = {
+                    val text = draft.trim()
+                    if (text.isNotEmpty() && connected) {
+                        chat.send(username.ifBlank { "ဧည့်သည်" }, text)
+                        draft = ""
+                        status = null
+                    } else if (!connected) status = "Chat server မချိတ်ဆက်ထားပါ။"
+                },
+                enabled = connected && draft.isNotBlank(),
+                colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = BackgroundTop)
+            ) { Text("ပို့မည်") }
         }
     }
 }
 
 @Composable
 private fun SettingsScreen(
+    modifier: Modifier,
     autoRefresh: Boolean,
     refreshSeconds: Int,
     onAutoRefreshChange: (Boolean) -> Unit,
     onRefreshSecondsChange: (Int) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    LazyColumn(
-        modifier = Modifier.weight(1f),
-        contentPadding = PaddingValues(bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
+    LazyColumn(modifier = modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { SectionTitle("ဆက်တင်များ") }
         item {
             Surface(color = CardColor, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
@@ -305,13 +312,7 @@ private fun SettingsScreen(
                             TextButton(onClick = { expanded = true }) { Text("ပြောင်းရန် ▾", color = Gold) }
                             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                                 listOf(15, 30, 60).forEach { seconds ->
-                                    DropdownMenuItem(
-                                        text = { Text("${seconds} စက္ကန့်") },
-                                        onClick = {
-                                            onRefreshSecondsChange(seconds)
-                                            expanded = false
-                                        }
-                                    )
+                                    DropdownMenuItem(text = { Text("${seconds} စက္ကန့်") }, onClick = { onRefreshSecondsChange(seconds); expanded = false })
                                 }
                             }
                         }
@@ -324,19 +325,11 @@ private fun SettingsScreen(
                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("API အခြေအနေ", color = TextPrimary, fontWeight = FontWeight.Bold)
                     Text("ရလဒ်ဒေတာကို သတ်မှတ်ထားသော API server မှ ရယူပါသည်။", color = TextSecondary, fontSize = 13.sp)
-                    Text("အလိုအလျောက်ပြန်လည်ရယူမှုနှင့် ကြားကာလကို ဒီစက်တွင် သိမ်းဆည်းထားသည်။", color = TextSecondary, fontSize = 13.sp)
+                    Text("Live Chat အသုံးပြုရန် CHAT_SERVER_URL ကို သတ်မှတ်ပြီး Chat server ကို deploy လုပ်ရန် လိုအပ်သည်။", color = TextSecondary, fontSize = 13.sp)
                 }
             }
         }
     }
-}
-
-private fun screenSubtitle(tab: String): String = when (tab) {
-    "Live" -> "တိုက်ရိုက်ရလဒ်"
-    "2D" -> "2D မှတ်တမ်း"
-    "3D" -> "3D မှတ်တမ်း"
-    "Chat" -> "တိုက်ရိုက်စကားပြောခန်း"
-    else -> "အက်ပ်ဆက်တင်များ"
 }
 
 @Composable
@@ -347,11 +340,7 @@ private fun SectionTitle(title: String) {
 @Composable
 private fun EmptyState(loading: Boolean) {
     Surface(color = CardColor, shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
-        Text(
-            if (loading) "ဒေတာရယူနေသည်…" else "ပြသရန် ဒေတာမရှိသေးပါ။ ပြန်လည်ရယူရန် ↻ ကိုနှိပ်ပါ။",
-            color = TextSecondary,
-            modifier = Modifier.padding(20.dp)
-        )
+        Text(if (loading) "ဒေတာရယူနေသည်…" else "ပြသရန် ဒေတာမရှိသေးပါ။ ပြန်လည်ရယူရန် ↻ ကိုနှိပ်ပါ။", color = TextSecondary, modifier = Modifier.padding(20.dp))
     }
 }
 
@@ -368,13 +357,19 @@ private fun ResultCard(title: String, result: String, set: String, value: String
     }
 }
 
-private fun JsonObject.text(key: String): String? =
-    get(key)?.takeUnless { it.isJsonNull }?.let { element -> runCatching { element.asString }.getOrNull() }
+private fun screenSubtitle(tab: String): String = when (tab) {
+    "Live" -> "တိုက်ရိုက်ရလဒ်"
+    "2D" -> "2D မှတ်တမ်း"
+    "3D" -> "3D မှတ်တမ်း"
+    "Chat" -> "တိုက်ရိုက်စကားပြောခန်း"
+    else -> "အက်ပ်ဆက်တင်များ"
+}
+
+private fun JsonObject.text(key: String): String? = get(key)?.takeUnless { it.isJsonNull }?.let { runCatching { it.asString }.getOrNull() }
 
 private fun isNetworkAvailable(context: Context): Boolean {
     val manager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     val network = manager.activeNetwork ?: return false
     val capabilities = manager.getNetworkCapabilities(network) ?: return false
-    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-        capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
 }

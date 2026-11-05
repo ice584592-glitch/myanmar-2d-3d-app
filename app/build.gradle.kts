@@ -16,8 +16,10 @@ android {
         versionName = "1.0"
 
         val baseUrl = providers.gradleProperty("MYANMAR_API_BASE_URL")
-            .orElse("https://myanmarnode.com").get()
+            .orElse("https://myanmarnode.com/").get()
+        val chatUrl = providers.gradleProperty("CHAT_SERVER_URL").orElse("").get()
         buildConfigField("String", "API_BASE_URL", "\"$baseUrl\"")
+        buildConfigField("String", "CHAT_SERVER_URL", "\"$chatUrl\"")
     }
 
     buildFeatures {
@@ -30,9 +32,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+    kotlinOptions { jvmTarget = "17" }
 }
 
 dependencies {
@@ -44,5 +44,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("io.socket:socket.io-client:2.1.1") {
+        exclude(group = "org.json", module = "json")
+    }
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
