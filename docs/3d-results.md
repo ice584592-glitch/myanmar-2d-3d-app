@@ -1,0 +1,1 @@
+The 3D screen displays the latest result from `threed-result-latest`, including the three-digit number, full first-prize number, draw date, and schedule details. It also shows history from `threed-results`, uses the API pagination metadata, and provides previous/next page controls. Numbers are rendered as strings so leading zeroes such as `077` remain intact.
