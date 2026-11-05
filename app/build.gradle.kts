@@ -15,8 +15,10 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        // Retrofit requires a trailing slash. Override this with the deployed
+        // backend proxy origin via MYANMAR_API_BASE_URL in gradle.properties.
         val baseUrl = providers.gradleProperty("MYANMAR_API_BASE_URL")
-            .orElse("https://myanmarnode.com").get()
+            .orElse("https://myanmarnode.com/").get().trimEnd('/') + "/"
         buildConfigField("String", "API_BASE_URL", "\"$baseUrl\"")
     }
 
