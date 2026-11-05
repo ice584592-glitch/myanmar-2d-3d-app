@@ -27,15 +27,17 @@ function isAllowed(path) {
     '/api/v1/twod-results',
     '/api/v1/threed-results',
     '/api/v1/threed-result-latest'
-  ].includes(path) || /^\\/api\\/v1\\/threed-results\\/\\d{4}-\\d{2}-\\d{2}$/.test(path);
+  ].includes(path) || /^\/api\/v1\/threed-results\/\d{4}-\d{2}-\d{2}$/.test(path);
 }
 
 app.get('/api/v1/*', async (req, res) => {
   if (!isAllowed(req.path)) return res.status(404).json({ message: 'Endpoint not allowed' });
+
   const url = new URL(upstream + req.path);
   for (const [key, value] of Object.entries(req.query)) {
     if (typeof value === 'string') url.searchParams.set(key, value);
   }
+
   try {
     const response = await fetch(url, {
       headers: { 'X-API-Key': apiKey, Accept: 'application/json' },
