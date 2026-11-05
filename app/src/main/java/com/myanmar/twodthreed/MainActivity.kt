@@ -5,12 +5,42 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -33,7 +63,11 @@ private const val PreferencesName = "myanmar_2d_3d_settings"
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { MaterialTheme(colorScheme = darkColorScheme(primary = Gold, background = Navy)) { ResultsApp() } }
+        setContent {
+            MaterialTheme(colorScheme = darkColorScheme(primary = Gold, background = Navy)) {
+                ResultsApp()
+            }
+        }
     }
 }
 
@@ -82,6 +116,7 @@ private fun ResultsApp() {
     LaunchedEffect(tab, history3dPage) {
         if (tab in listOf("Live", "2D", "3D")) refresh()
     }
+
     LaunchedEffect(tab, autoRefresh, refreshSeconds) {
         if (tab == "Live" && autoRefresh) {
             while (true) {
@@ -91,58 +126,150 @@ private fun ResultsApp() {
         }
     }
 
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Navy, Blue, Color(0xFF174EAB))))) {
-        Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(horizontal = 16.dp)) {
-            Row(Modifier.fillMaxWidth().padding(vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("မြန်မာ 2D / 3D", Modifier.weight(1f), color = Color.White, fontSize = 23.sp, fontWeight = FontWeight.Bold)
-                Text("ရလဒ်", color = Gold, fontWeight = FontWeight.Bold)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Brush.verticalGradient(listOf(Navy, Blue, Color(0xFF174EAB))))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Myanmar 2D 3D",
+                    color = Color.White,
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "ရလဒ်",
+                    color = Gold,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
             }
-            error?.let { Text(it, color = Color(0xFFFFD5D5), modifier = Modifier.padding(bottom = 8.dp)) }
-            if (loading) LinearProgressIndicator(Modifier.fillMaxWidth(), color = Gold)
+
+            error?.let {
+                Text(
+                    text = it,
+                    color = Color(0xFFFFD5D5),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            if (loading) {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Gold
+                )
+            }
 
             when (tab) {
-                "Live" -> LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    item {
-                        val data = live?.getAsJsonObject("data")
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                            Text(data?.text("live") ?: "--", color = Color.White, fontSize = 96.sp, fontWeight = FontWeight.ExtraBold)
-                            Text("လက်ရှိ 2D", color = Pale, fontSize = 18.sp)
-                            Spacer(Modifier.height(16.dp))
-                            ResultCard("မနက် ၉:၃၀", data?.firstText("result_930", "result_0930", "result_9_30") ?: "--", data?.text("live_set") ?: "--", data?.text("live_val") ?: "--")
-                            ResultCard("နေ့လယ် ၁၁:၀၀", data?.firstText("result_1100") ?: "--", data?.text("live_set") ?: "--", data?.text("live_val") ?: "--")
-                            ResultCard("နေ့လယ် ၂:၀၀", data?.firstText("result_200", "result_1400", "result_2") ?: "--", data?.text("live_set") ?: "--", data?.text("live_val") ?: "--")
-                            ResultCard("ညနေ ၄:၃၀", data?.firstText("result_430", "result_430") ?: "--", data?.text("live_set") ?: "--", data?.text("live_val") ?: "--")
-                            Text(data?.text("date") ?: "", color = Pale, modifier = Modifier.padding(12.dp))
+                "Live" -> {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        item {
+                            LiveHeroCard(data = live?.getAsJsonObject("data"))
+                        }
+                        item { LiveAdBanner() }
+                        item {
+                            val data = live?.getAsJsonObject("data")
+                            ResultCard(
+                                title = "မနက် ၉:၃၀",
+                                result = data?.firstText("result_930", "result_0930", "result_9_30") ?: "--",
+                                set = data?.text("live_set") ?: "--",
+                                value = data?.text("live_val") ?: "--"
+                            )
+                        }
+                        item {
+                            val data = live?.getAsJsonObject("data")
+                            ResultCard(
+                                title = "နေ့လယ် ၂:၀၀",
+                                result = data?.firstText("result_200", "result_1400", "result_2") ?: "--",
+                                set = data?.text("live_set") ?: "--",
+                                value = data?.text("live_val") ?: "--"
+                            )
+                        }
+                        item {
+                            Text(
+                                text = live?.getAsJsonObject("data")?.text("date") ?: "",
+                                color = Pale,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
                         }
                     }
                 }
-                "2D" -> LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+                "2D" -> LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     item { Text("2D မှတ်တမ်း", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold) }
                     val rows = history2d?.getAsJsonArray("data")
-                    if (rows == null || rows.size() == 0) item { EmptyState(loading) }
-                    else items(rows.size()) { index ->
-                        val row = rows[index].asJsonObject
-                        Surface(color = Color(0x332D69C1), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
-                            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                                Text(row.text("date") ?: "", color = Gold, fontWeight = FontWeight.Bold)
-                                InfoLine("မနက် ၉:၃၀", row.firstText("result_930", "result_0930", "result_9_30") ?: "--")
-                                InfoLine("နေ့လယ် ၁၁:၀၀", row.text("result_1100") ?: "--")
-                                InfoLine("နေ့လယ် ၁၂:၀၀", row.text("result_1200") ?: "--")
-                                InfoLine("နေ့လယ် ၂:၀၀", row.firstText("result_200", "result_1400", "result_2") ?: "--")
-                                InfoLine("နေ့လယ် ၃:၀၀", row.text("result_300") ?: "--")
-                                InfoLine("ညနေ ၄:၃၀", row.text("result_430") ?: "--")
+                    if (rows == null || rows.size() == 0) {
+                        item { EmptyState(loading) }
+                    } else {
+                        items(rows.size()) { index ->
+                            val row = rows[index].asJsonObject
+                            Surface(
+                                color = Color(0x332D69C1),
+                                shape = RoundedCornerShape(20.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    Modifier.padding(18.dp),
+                                    verticalArrangement = Arrangement.spacedBy(7.dp)
+                                ) {
+                                    Text(row.text("date") ?: "", color = Gold, fontWeight = FontWeight.Bold)
+                                    InfoLine("မနက် ၉:၃၀", row.firstText("result_930", "result_0930", "result_9_30") ?: "--")
+                                    InfoLine("နေ့လယ် ၁၁:၀၀", row.text("result_1100") ?: "--")
+                                    InfoLine("နေ့လယ် ၁၂:၀၀", row.text("result_1200") ?: "--")
+                                    InfoLine("နေ့လယ် ၂:၀၀", row.firstText("result_200", "result_1400", "result_2") ?: "--")
+                                    InfoLine("ညနေ ၄:၃၀", row.text("result_430") ?: "--")
+                                }
                             }
                         }
                     }
                 }
-                "3D" -> LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+                "3D" -> LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     item { Text("နောက်ဆုံး 3D ရလဒ်", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold) }
                     item {
                         val data = latest3d?.getAsJsonObject("data")
                         val schedule = latest3d?.getAsJsonObject("schedule")
-                        Surface(color = Color(0x332D69C1), shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
-                            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                                Text(data?.text("threed_number") ?: "---", color = Gold, fontSize = 58.sp, fontWeight = FontWeight.ExtraBold)
+                        Surface(
+                            color = Color(0x332D69C1),
+                            shape = RoundedCornerShape(24.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                Modifier.padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(9.dp)
+                            ) {
+                                Text(
+                                    data?.text("threed_number") ?: "---",
+                                    color = Gold,
+                                    fontSize = 58.sp,
+                                    fontWeight = FontWeight.ExtraBold
+                                )
                                 InfoLine("ဆုကြီးနံပါတ်", data?.text("first_prize_number") ?: "--")
                                 InfoLine("ထွက်ရက်", data?.text("draw_date") ?: "--")
                                 if (schedule != null) {
@@ -159,51 +286,261 @@ private fun ResultsApp() {
                     val rows = history3d?.getAsJsonArray("data")
                     val total = history3d?.getAsJsonObject("meta")?.int("total")
                     item { Text("3D မှတ်တမ်း${total?.let { " ($it)" } ?: ""}", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold) }
-                    if (rows == null || rows.size() == 0) item { EmptyState(loading) }
-                    else items(rows.size()) { index ->
-                        val row = rows[index].asJsonObject
-                        Surface(color = Color(0x332D69C1), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
-                            Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Text(row.text("draw_date") ?: "", Modifier.weight(1f), color = Pale, fontSize = 16.sp)
-                                Text(row.text("threed_number") ?: "---", color = Gold, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                    if (rows == null || rows.size() == 0) {
+                        item { EmptyState(loading) }
+                    } else {
+                        items(rows.size()) { index ->
+                            val row = rows[index].asJsonObject
+                            Surface(
+                                color = Color(0x332D69C1),
+                                shape = RoundedCornerShape(20.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    Modifier.fillMaxWidth().padding(18.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(row.text("draw_date") ?: "", Modifier.weight(1f), color = Pale, fontSize = 16.sp)
+                                    Text(row.text("threed_number") ?: "---", color = Gold, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
                     }
                     item {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            TextButton(onClick = { history3dPage = (history3dPage - 1).coerceAtLeast(1) }, enabled = history3dPage > 1 && !loading) { Text("‹ အရင်", color = Gold) }
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(
+                                onClick = { history3dPage = (history3dPage - 1).coerceAtLeast(1) },
+                                enabled = history3dPage > 1 && !loading
+                            ) {
+                                Text("‹ အရင်", color = Gold)
+                            }
                             Text("စာမျက်နှာ $history3dPage / $history3dLastPage", color = Pale)
-                            TextButton(onClick = { history3dPage = (history3dPage + 1).coerceAtMost(history3dLastPage) }, enabled = history3dPage < history3dLastPage && !loading) { Text("နောက် ›", color = Gold) }
+                            TextButton(
+                                onClick = { history3dPage = (history3dPage + 1).coerceAtMost(history3dLastPage) },
+                                enabled = history3dPage < history3dLastPage && !loading
+                            ) {
+                                Text("နောက်တစ်ခု ›", color = Gold)
+                            }
                         }
                     }
                 }
-                "Lucky" -> LuckyNumberScreen(luckyNumbers = luckyNumbers, onGenerate = {
-                    luckyNumbers = List(6) { Random.nextInt(0, 100).toString().padStart(2, '0') }
-                }, modifier = Modifier.weight(1f))
+
+                "Lucky" -> LuckyNumberScreen(
+                    luckyNumbers = luckyNumbers,
+                    onGenerate = {
+                        luckyNumbers = List(6) { Random.nextInt(0, 100).toString().padStart(2, '0') }
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+
                 else -> SettingsScreen(
                     modifier = Modifier.weight(1f),
                     autoRefresh = autoRefresh,
                     refreshSeconds = refreshSeconds,
-                    onAutoRefreshChange = { enabled -> autoRefresh = enabled; preferences.edit().putBoolean("auto_refresh", enabled).apply() },
-                    onRefreshSecondsChange = { seconds -> refreshSeconds = seconds; preferences.edit().putInt("refresh_seconds", seconds).apply() }
+                    onAutoRefreshChange = { enabled ->
+                        autoRefresh = enabled
+                        preferences.edit().putBoolean("auto_refresh", enabled).apply()
+                    },
+                    onRefreshSecondsChange = { seconds ->
+                        refreshSeconds = seconds
+                        preferences.edit().putInt("refresh_seconds", seconds).apply()
+                    }
                 )
             }
 
-            Row(Modifier.fillMaxWidth().padding(bottom = 10.dp).background(Color(0xFF071F4F), RoundedCornerShape(28.dp)).padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp)
+                    .background(Color(0xFF071F4F), RoundedCornerShape(28.dp))
+                    .padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 listOf("Live", "2D", "3D", "Lucky", "Settings").forEach { label ->
-                    TextButton(onClick = { tab = label }, modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 1.dp, vertical = 7.dp)) {
-                        Text(when (label) { "Lucky" -> "ကံစမ်း"; "Settings" -> "ဆက်တင်"; else -> label }, color = if (tab == label) Gold else Pale, fontWeight = FontWeight.Bold, fontSize = 10.sp, maxLines = 1)
+                    TextButton(
+                        onClick = { tab = label },
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 1.dp, vertical = 7.dp)
+                    ) {
+                        Text(
+                            text = when (label) {
+                                "Lucky" -> "ကံစမ်း"
+                                "Settings" -> "ဆက်တင်"
+                                else -> label
+                            },
+                            color = if (tab == label) Gold else Pale,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                            maxLines = 1
+                        )
                     }
                 }
-                if (tab in listOf("Live", "2D", "3D")) TextButton(onClick = { refresh() }, contentPadding = PaddingValues(horizontal = 3.dp)) { Text("↻", color = Gold, fontSize = 20.sp) }
+                if (tab in listOf("Live", "2D", "3D")) {
+                    TextButton(
+                        onClick = { refresh() },
+                        contentPadding = PaddingValues(horizontal = 3.dp)
+                    ) {
+                        Text("↻", color = Gold, fontSize = 20.sp)
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun LuckyNumberScreen(luckyNumbers: List<String>, onGenerate: () -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+private fun LiveHeroCard(data: JsonObject?) {
+    Surface(
+        color = Color(0xFFD64A4C),
+        shape = RoundedCornerShape(28.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "04:30 LIVE",
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Surface(
+                    color = Color.White.copy(alpha = 0.18f),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.padding(4.dp)
+                ) {
+                    Text(
+                        text = "✓",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(horizontalAlignment = Alignment.Start) {
+                    Text("SET", color = Color(0xFFEDE4FF), fontSize = 16.sp)
+                    Text(
+                        text = data?.text("live_set") ?: "1497.99",
+                        color = Color.White,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Text(
+                    text = data?.text("live") ?: "90",
+                    color = Gold,
+                    fontSize = 90.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Column(horizontalAlignment = Alignment.End) {
+                    Text("VAL", color = Color(0xFFEDE4FF), fontSize = 16.sp)
+                    Text(
+                        text = data?.text("live_val") ?: "86950.24",
+                        color = Color.White,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Surface(
+                color = Color.White.copy(alpha = 0.12f),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        color = Color(0xFF4ADE80),
+                        shape = RoundedCornerShape(999.dp),
+                        modifier = Modifier.padding(end = 10.dp)
+                    ) {
+                        Text(
+                            text = "✓",
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                    Text(
+                        text = "Updated: ${data?.text("date") ?: "05/11/26 04:30:13 PM"}",
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LiveAdBanner() {
+    Surface(
+        color = Color(0xFFFBF0B2),
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = "🎰 ၂ လုံးထီ တိုက်ရိုက်ထိုးလို့ရပါပြီ 🎰",
+                color = Color(0xFF3B1D00),
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+            Text(
+                text = "💥 ဆပမာဏ: ၈၅ ဆ",
+                color = Color(0xFF3B1D00),
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "📞 ဆက်သွယ်ရန် Viber နံပါတ်: 09686091304",
+                color = Color(0xFF3B1D00),
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "💳 ငွေသွင်း/ငွေထုတ်: KPay၊ Wave Pay၊ AYA Pay",
+                color = Color(0xFF3B1D00),
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+private fun LuckyNumberScreen(
+    luckyNumbers: List<String>,
+    onGenerate: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         Text("ကံစမ်းဂဏန်း", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
         Text("ကျပန်း 2D ဂဏန်း ၆ လုံး", color = Pale, fontSize = 14.sp)
         if (luckyNumbers.isEmpty()) {
@@ -215,14 +552,26 @@ private fun LuckyNumberScreen(luckyNumbers: List<String>, onGenerate: () -> Unit
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     row.forEach { number ->
                         Surface(color = Color(0x332D69C1), shape = RoundedCornerShape(20.dp), modifier = Modifier.weight(1f)) {
-                            Text(number, color = Gold, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(vertical = 20.dp).wrapContentWidth(Alignment.CenterHorizontally))
+                            Text(
+                                text = number,
+                                color = Gold,
+                                fontSize = 36.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                modifier = Modifier
+                                    .padding(vertical = 20.dp)
+                                    .wrapContentWidth(Alignment.CenterHorizontally)
+                            )
                         }
                     }
                 }
             }
         }
-        Button(onClick = onGenerate, colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Navy)) { Text("ကံစမ်းဂဏန်းထုတ်မည်", fontWeight = FontWeight.Bold) }
-        Text("ဤဂဏန်းများသည် ကျပန်းထုတ်ပေးခြင်းသာဖြစ်ပြီး ရလဒ်အာမခံချက် မရှိပါ။", color = Pale, fontSize = 12.sp)
+        Button(
+            onClick = onGenerate,
+            colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Navy)
+        ) {
+            Text("ကံစမ်းဂဏန်းထုတ်မည်", fontWeight = FontWeight.Bold)
+        }
     }
 }
 
@@ -235,7 +584,11 @@ private fun SettingsScreen(
     onRefreshSecondsChange: (Int) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    LazyColumn(modifier = modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         item { Text("ဆက်တင်များ", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold) }
         item {
             Surface(color = Color(0x332D69C1), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
@@ -251,13 +604,16 @@ private fun SettingsScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text("ပြန်လည်ရယူချိန်", color = Color.White, fontWeight = FontWeight.SemiBold)
-                            Text("$refreshSeconds စက္ကန့်တိုင်း", color = Pale, fontSize = 12.sp)
+                            Text("${refreshSeconds} စက္ကန့်တိုင်း", color = Pale, fontSize = 12.sp)
                         }
                         Box {
                             TextButton(onClick = { expanded = true }) { Text("ပြောင်းရန် ▾", color = Gold) }
                             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                                 listOf(15, 30, 60).forEach { seconds ->
-                                    DropdownMenuItem(text = { Text("$seconds စက္ကန့်") }, onClick = { onRefreshSecondsChange(seconds); expanded = false })
+                                    DropdownMenuItem(
+                                        text = { Text("${seconds} စက္ကန့်") },
+                                        onClick = { onRefreshSecondsChange(seconds); expanded = false }
+                                    )
                                 }
                             }
                         }
@@ -270,7 +626,7 @@ private fun SettingsScreen(
                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("API ဆက်သွယ်မှု", color = Color.White, fontWeight = FontWeight.Bold)
                     Text("ရလဒ်များရယူရန် backend API URL ကို build configuration မှာ သတ်မှတ်ထားရပါမည်။", color = Pale, fontSize = 13.sp)
-                    Text("SETLIVE_API_KEY ကို Android app ထဲမထည့်ပါနှင့်။ Backend server မှာသာ လုံခြုံစွာထားပါ။", color = Pale, fontSize = 12.sp)
+                    Text("SETLIVE_API_KEY ကို Android app ထဲမထည့်ပါနှင့်။ Backend server မှာသာ လုံခြုံစွာထားပါ။", color = Pale, fontSize = 13.sp)
                 }
             }
         }
@@ -287,12 +643,20 @@ private fun InfoLine(label: String, value: String) {
 
 @Composable
 private fun EmptyState(loading: Boolean) {
-    Text(if (loading) "ဒေတာရယူနေသည်…" else "ပြသရန် ဒေတာမရှိသေးပါ။", color = Pale, modifier = Modifier.padding(16.dp))
+    Text(
+        text = if (loading) "ဒေတာရယူနေသည်…" else "ပြသရန် ဒေတာမရှိသေးပါ။",
+        color = Pale,
+        modifier = Modifier.padding(16.dp)
+    )
 }
 
 @Composable
 private fun ResultCard(title: String, result: String, set: String, value: String) {
-    Surface(color = Color(0x332D69C1), shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
+    Surface(
+        color = Color(0x332D69C1),
+        shape = RoundedCornerShape(24.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp)
+    ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(title, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
@@ -303,14 +667,11 @@ private fun ResultCard(title: String, result: String, set: String, value: String
     }
 }
 
-private fun screenSubtitle(tab: String): String = when (tab) {
-    "Live" -> "တိုက်ရိုက်ရလဒ်"
-    "2D" -> "2D မှတ်တမ်း"
-    "3D" -> "3D မှတ်တမ်း"
-    "Lucky" -> "ကျပန်းကံစမ်းဂဏန်း"
-    else -> "အက်ပ်ဆက်တင်များ"
-}
+private fun JsonObject.text(key: String): String? =
+    get(key)?.takeUnless { it.isJsonNull }?.let { runCatching { it.asString }.getOrNull() }
 
-private fun JsonObject.text(key: String): String? = get(key)?.takeUnless { it.isJsonNull }?.let { runCatching { it.asString }.getOrNull() }
-private fun JsonObject.firstText(vararg keys: String): String? = keys.firstNotNullOfOrNull { text(it) }
-private fun JsonObject.int(key: String): Int? = get(key)?.takeUnless { it.isJsonNull }?.let { runCatching { it.asInt }.getOrNull() }
+private fun JsonObject.firstText(vararg keys: String): String? =
+    keys.firstNotNullOfOrNull { text(it) }
+
+private fun JsonObject.int(key: String): Int? =
+    get(key)?.takeUnless { it.isJsonNull }?.let { runCatching { it.asInt }.getOrNull() }
