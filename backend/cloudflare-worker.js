@@ -1,4 +1,5 @@
 const UPSTREAM = "https://setlive.myanmarnode.com";
+const YAHOO_CHART = "https://query1.finance.yahoo.com/v8/finance/chart/";
 
 function isAllowed(path) {
   return [
@@ -17,6 +18,10 @@ function corsHeaders() {
   };
 }
 
+function jsonError(message, status, cors) {
+  return Response.json({ message }, { status, headers: cors });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -31,15 +36,39 @@ export default {
     }
 
     if (request.method !== "GET" || !url.pathname.startsWith("/api/v1/")) {
-      return Response.json({ message: "Not found" }, { status: 404, headers: cors });
+      return jsonError("Not found", 404, cors);
+    }
+
+    // Public Yahoo Finance chart endpoint; does not require the SetLive API key.
+    if (url.pathname === "/api/v1/yahoo/chart") {
+      const symbol = url.searchParams.get("symbol") || "AAPL";
+      if (!/^[A-Za-z0-9.^=_-]{1,32}$/.test(symbol)) {
+        return jsonError("Invalid Yahoo Finance symbol", 400, cors);
+      }
+
+      const yahooUrl = new URL(encodeURIComponent(symbol), YAHOO_CHART);
+      yahooUrl.searchParams.set("interval", "1d");
+      yahooUrl.searchParams.set("range", "1mo");
+      try {
+        const yahooResponse = await fetch(yahooUrl, {
+          headers: { "User-Agent": "Mozilla/5.0", Accept: "application/json" },
+          signal: AbortSignal.timeout(25000),
+        });
+        const headers = new Headers(cors);
+        headers.set("Content-Type", yahooResponse.headers.get("Content-Type") || "application/json");
+        headers.set("Cache-Control", "no-store");
+        return new Response(yahooResponse.body, { status: yahooResponse.status, headers });
+      } catch (_error) {
+        return jsonError("Yahoo Finance API unavailable", 502, cors);
+      }
     }
 
     if (!isAllowed(url.pathname)) {
-      return Response.json({ message: "Endpoint not allowed" }, { status: 404, headers: cors });
+      return jsonError("Endpoint not allowed", 404, cors);
     }
 
     if (!env.SETLIVE_API_KEY) {
-      return Response.json({ message: "Server API key is not configured" }, { status: 500, headers: cors });
+      return jsonError("Server API key is not configured", 500, cors);
     }
 
     const upstreamUrl = new URL(url.pathname + url.search, UPSTREAM);
@@ -56,7 +85,7 @@ export default {
       headers.set("Cache-Control", "no-store");
       return new Response(upstreamResponse.body, { status: upstreamResponse.status, headers });
     } catch (_error) {
-      return Response.json({ message: "Upstream API unavailable" }, { status: 502, headers: cors });
+      return jsonError("Upstream API unavailable", 502, cors);
     }
   },
 };
