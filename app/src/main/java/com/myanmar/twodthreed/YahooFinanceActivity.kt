@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.gson.JsonObject
@@ -53,7 +51,13 @@ private val YahooPale = Color(0xFFB8D0FF)
 class YahooFinanceActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { MaterialTheme { YahooFinanceScreen(onOpenResults = { startActivity(Intent(this, MainActivity::class.java)) }) } }
+        setContent {
+            MaterialTheme {
+                YahooFinanceScreen(
+                    onOpenResults = { startActivity(Intent(this, MainActivity::class.java)) },
+                )
+            }
+        }
     }
 }
 
@@ -77,11 +81,18 @@ private fun YahooFinanceScreen(onOpenResults: () -> Unit) {
             loading = true
             error = null
             try {
-                result = YahooFinanceClient.api.chart(requestedSymbol)
-                val chart = result?.getAsJsonObject("chart")
-                if (chart?.get("error")?.isJsonNull == false) {
-                    error = chart?.getAsJsonObject("error")?.get("description")?.asString
-                        ?: "Yahoo Finance မှ ဒေတာမရပါ။"
+                val response = YahooFinanceClient.api.chart(requestedSymbol)
+                result = response
+                val chart = response.getAsJsonObject("chart")
+                val yahooError = chart?.get("error")
+                    ?.takeUnless { it.isJsonNull }
+                    ?.asJsonObject
+                    ?.get("description")
+                    ?.takeUnless { it.isJsonNull }
+                    ?.asString
+                if (yahooError != null) error = yahooError
+                else if (chart?.getAsJsonArray("result")?.size() == 0) {
+                    error = "Yahoo Finance မှ ဒေတာမရပါ။ Symbol ကို စစ်ဆေးပါ။"
                 }
             } catch (_: Exception) {
                 error = "Yahoo Finance ဒေတာရယူမရပါ။ Worker URL နဲ့ အင်တာနက်ကို စစ်ဆေးပါ။"
@@ -95,7 +106,8 @@ private fun YahooFinanceScreen(onOpenResults: () -> Unit) {
     LaunchedEffect(Unit) { loadChart() }
 
     val chart = result?.getAsJsonObject("chart")
-    val quoteResult = chart?.getAsJsonArray("result")?.firstOrNull()?.takeUnless { it.isJsonNull }?.asJsonObject
+    val quoteResult = chart?.getAsJsonArray("result")?.firstOrNull()
+        ?.takeUnless { it.isJsonNull }?.asJsonObject
     val metadata = quoteResult?.getAsJsonObject("meta")
     val quote = quoteResult?.getAsJsonObject("indicators")?.getAsJsonArray("quote")
         ?.firstOrNull()?.takeUnless { it.isJsonNull }?.asJsonObject
@@ -122,7 +134,7 @@ private fun YahooFinanceScreen(onOpenResults: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text("Yahoo Finance", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold)
-        Text("စတော့ဈေးနှုန်းနှင့် တစ်လစာ နေ့စဉ်မှတ်တမ်း", color = YahooPale)
+        Text("စတော့ဈေးနှုန်းနှင့် တစ်လစာ နေ့စ��်မှတ်တမ်း", color = YahooPale)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedTextField(
                 value = symbol,
@@ -150,7 +162,10 @@ private fun YahooFinanceScreen(onOpenResults: () -> Unit) {
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 32.sp,
                     )
-                    Text("${metadata?.get("exchangeName")?.takeUnless { it.isJsonNull }?.asString.orEmpty()} · 1 လ / 1 ရက်ကြားကာလ", color = YahooPale)
+                    Text(
+                        "${metadata?.get("exchangeName")?.takeUnless { it.isJsonNull }?.asString.orEmpty()} · 1 လ / 1 ရက်ကြားကာလ",
+                        color = YahooPale,
+                    )
                 }
             }
             Text("နေ့စဉ်ပိတ်ဈေး", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
